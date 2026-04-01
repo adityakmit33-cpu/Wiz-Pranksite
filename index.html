@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Wiz – Cloud Security Control Plane</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0b0f1a;
+    --surface: #141929;
+    --border: #1e2a3a;
+    --blue: #38bdf8;
+    --green: #00ff88;
+    --text: #e2e8f0;
+    --muted: #8899aa;
+    --nav-h: 52px;
+  }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: var(--nav-h);
+    background: rgba(11,15,26,.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px;
+  }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.1rem; }
+  .logo svg { width: 22px; height: 22px; }
+  .nav-links { display: flex; gap: 20px; font-size: .82rem; color: var(--muted); }
+  .nav-links a { color: inherit; text-decoration: none; cursor: pointer; }
+  .nav-links a:hover { color: var(--text); }
+
+  /* ── PAGES ── */
+  .page { display: none; padding-top: var(--nav-h); min-height: 100vh; }
+  .page.active { display: block; }
+
+  /* ── HOME PAGE ── */
+  #home { padding: 40px 20px 60px; }
+  .hero-title { font-size: 2.2rem; font-weight: 800; line-height: 1.15; margin-bottom: 16px; }
+  .hero-title span { color: var(--blue); }
+  .hero-sub { font-size: .9rem; color: var(--muted); line-height: 1.6; margin-bottom: 28px; }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--blue); color: #0b0f1a;
+    font-family: 'Sora', sans-serif; font-weight: 700; font-size: .85rem;
+    border: none; border-radius: 8px; padding: 12px 20px; cursor: pointer;
+    text-decoration: none;
+    transition: opacity .2s;
+  }
+  .btn-primary:hover { opacity: .85; }
+
+  .cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 32px 0; }
+  @media (max-width: 600px) { .cards { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+  }
+  .card-icon { margin-bottom: 12px; color: var(--blue); }
+  .card h3 { font-size: .95rem; font-weight: 700; margin-bottom: 8px; }
+  .card p { font-size: .8rem; color: var(--muted); line-height: 1.5; }
+
+  .stats {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px;
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; text-align: center;
+  }
+  .stat-val { font-size: 1.5rem; font-weight: 800; }
+  .stat-val.blue { color: var(--blue); }
+  .stat-val.green { color: var(--green); }
+  .stat-label { font-size: .72rem; color: var(--muted); margin-top: 4px; }
+
+  /* ── LEARNING PAGE ── */
+  #learning { padding: 40px 20px 60px; }
+  .page-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
+  .page-sub { font-size: .85rem; color: var(--muted); margin-bottom: 28px; }
+  .module-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 480px) { .module-grid { grid-template-columns: 1fr; } }
+  .module-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+    position: relative; cursor: pointer;
+    transition: border-color .2s;
+  }
+  .module-card:hover { border-color: var(--blue); }
+  .module-card:last-child { border-color: #ff4444; }
+  .module-card:last-child:hover { border-color: #ff6666; }
+  .badge {
+    font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+    margin-bottom: 8px;
+  }
+  .badge.beginner { color: var(--blue); }
+  .badge.intermediate { color: #a78bfa; }
+  .badge.advanced { color: #fb923c; }
+  .badge.specialized { color: var(--green); }
+  .badge.expert { color: #f472b6; }
+  .badge.danger { color: #ff4444; }
+  .module-card h3 { font-size: .9rem; font-weight: 700; margin-bottom: 8px; }
+  .module-card p { font-size: .78rem; color: var(--muted); line-height: 1.5; margin-bottom: 14px; }
+  .module-meta { font-size: .72rem; color: var(--muted); display: flex; align-items: center; justify-content: space-between; }
+  .module-icon { color: var(--muted); margin-bottom: 12px; }
+
+  /* ── SCAN PAGE ── */
+  #scan {
+    display: none; min-height: 100vh;
+    background: #000;
+    position: relative; overflow: hidden;
+  }
+  #scan.active { display: block; }
+  #scan canvas {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    opacity: .55;
+  }
+  .scan-content {
+    position: relative; z-index: 10;
+    padding-top: var(--nav-h);
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 100vh;
+    padding: calc(var(--nav-h) + 20px) 20px 40px;
+  }
+  .scan-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.4rem; font-weight: 600;
+    color: var(--green); text-align: center;
+    letter-spacing: .12em; margin-bottom: 10px;
+    text-shadow: 0 0 20px rgba(0,255,136,.5);
+    animation: glitch 2.5s infinite;
+  }
+  @keyframes glitch {
+    0%,95%,100% { transform: none; }
+    96% { transform: translateX(-2px) skewX(-1deg); }
+    97% { transform: translateX(2px) skewX(1deg); }
+    98% { transform: translateX(-1px); }
+  }
+  .scan-sub { font-family: 'IBM Plex Mono', monospace; font-size: .78rem; color: #88cc99; text-align: center; margin-bottom: 28px; }
+  .terminal {
+    background: rgba(0,0,0,.8); border: 1px solid #00ff8844;
+    border-radius: 8px; padding: 20px; width: 100%; max-width: 520px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .term-header { display: flex; justify-content: space-between; font-size: .8rem; color: var(--green); margin-bottom: 10px; }
+  .progress-bar-wrap { background: #0a1a0a; border-radius: 3px; height: 12px; margin-bottom: 16px; overflow: hidden; }
+  .progress-bar { height: 100%; background: var(--green); border-radius: 3px; width: 0%; transition: width .4s linear; box-shadow: 0 0 10px var(--green); }
+  .term-log { font-size: .75rem; color: #66cc88; min-height: 24px; margin-bottom: 16px; }
+  .compromised-label { font-size: .65rem; color: #88aa88; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 8px; }
+  .compromised-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .comp-item {
+    background: rgba(255,0,0,.12); border: 1px solid rgba(255,0,0,.3);
+    border-radius: 4px; padding: 8px 10px; font-size: .72rem; color: #ff8888;
+    display: flex; align-items: center; gap: 6px; opacity: 0;
+    transition: opacity .5s;
+  }
+  .comp-item.show { opacity: 1; }
+  .comp-dot { width: 7px; height: 7px; border-radius: 50%; background: #ff4444; flex-shrink: 0; }
+
+  /* ── GOTCHA PAGE ── */
+  #gotcha {
+    display: none; min-height: 100vh;
+    background: #000; position: relative; overflow: hidden;
+  }
+  #gotcha.active { display: block; }
+  #gotcha canvas {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    opacity: .4;
+  }
+  .gotcha-content {
+    position: relative; z-index: 10;
+    padding: calc(var(--nav-h) + 60px) 20px 40px;
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center;
+  }
+  .gotcha-icon { font-size: 3.5rem; margin-bottom: 20px; animation: bounce .8s infinite alternate; }
+  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-8px); } }
+  .gotcha-title {
+    font-size: 2.5rem; font-weight: 800; color: #fff;
+    letter-spacing: .05em; margin-bottom: 10px;
+  }
+  .gotcha-sub { font-size: 1.1rem; font-weight: 700; color: #f59e0b; margin-bottom: 28px; }
+  .gotcha-box {
+    background: rgba(0,0,0,.75); border: 1px solid #f59e0b55;
+    border-radius: 12px; padding: 24px 20px; max-width: 440px; width: 100%;
+  }
+  .gotcha-box p { font-size: .9rem; color: var(--text); line-height: 1.6; margin-bottom: 14px; }
+  .btn-home {
+    display: inline-block;
+    background: #f59e0b; color: #000;
+    font-family: 'Sora', sans-serif; font-weight: 700; font-size: .9rem;
+    border: none; border-radius: 8px; padding: 12px 28px; cursor: pointer;
+    transition: opacity .2s;
+  }
+  .btn-home:hover { opacity: .85; }
+  .gotcha-footer { margin-top: 20px; font-size: .75rem; color: #556; font-style: italic; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo" onclick="showPage('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    </svg>
+    Wiz
+  </div>
+  <div class="nav-links">
+    <a onclick="showPage('home')">Platform</a>
+    <a onclick="showPage('learning')">Learning</a>
+    <a>Docs</a>
+  </div>
+</nav>
+
+<!-- HOME -->
+<div id="home" class="page active">
+  <div style="padding:40px 20px 60px;">
+    <h1 class="hero-title">Your Cloud Security <span>Control Plane</span></h1>
+    <p class="hero-sub">Secure everything you build and run in the cloud — from code to runtime. Trusted by the fastest growing cloud-native companies.</p>
+    <button class="btn-primary" onclick="startScan()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+      View Learning Modules
+    </button>
+
+    <div class="cards" style="margin-top:32px;">
+      <div class="card">
+        <div class="card-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+        </div>
+        <h3>Agentless Visibility</h3>
+        <p>Across AWS, Azure, GCP and on-premises without installing a single agent</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="8" height="8" rx="1"/></svg>
+        </div>
+        <h3>Security Graph</h3>
+        <p>Contextual risk analysis and attack path visualization for faster response</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3>Real-time Threats</h3>
+        <p>Detect and respond to advanced threats with automated incident response</p>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div>
+        <div class="stat-val blue">500K+</div>
+        <div class="stat-label">Cloud Resources Protected</div>
+      </div>
+      <div>
+        <div class="stat-val blue">99.9%</div>
+        <div class="stat-label">Threat Detection Accuracy</div>
+      </div>
+      <div>
+        <div class="stat-val green">240 min</div>
+        <div class="stat-label">Average Response Time</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LEARNING -->
+<div id="learning" class="page">
+  <div style="padding:40px 20px 60px;">
+    <h1 class="page-title">Learning Modules</h1>
+    <p class="page-sub">Advance your cloud security expertise with comprehensive courses</p>
+    <div class="module-grid">
+      <div class="module-card" onclick="showPage('home')">
+        <div class="module-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+        <div class="badge beginner">Beginner</div>
+        <h3>Cloud Security Fundamentals</h3>
+        <p>Learn core concepts of cloud security, shared responsibility model, and best practices for AWS, Azure, and GCP.</p>
+        <div class="module-meta"><span>4 courses &nbsp; 6 hours</span><span>→</span></div>
+      </div>
+      <div class="module-card" onclick="showPage('home')">
+        <div class="module-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <div class="badge intermediate">Intermediate</div>
+        <h3>IAM & Access Control</h3>
+        <p>Master identity and access management, role-based access control, privilege escalation prevention, and attack paths.</p>
+        <div class="module-meta"><span>5 courses &nbsp; 8 hours</span><span>→</span></div>
+      </div>
+      <div class="module-card" onclick="showPage('home')">
+        <div class="module-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <div class="badge advanced">Advanced</div>
+        <h3>Threat Detection & Response</h3>
+        <p>Deep dive into detecting advanced threats, incident response, threat hunting, and security automation.</p>
+        <div class="module-meta"><span>6 courses &nbsp; 10 hours</span><span>→</span></div>
+      </div>
+      <div class="module-card" onclick="showPage('home')">
+        <div class="module-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
+        <div class="badge specialized">Specialized</div>
+        <h3>Container & Kubernetes Security</h3>
+        <p>Secure containerized workloads, Kubernetes hardening, image scanning, and runtime protection strategies.</p>
+        <div class="module-meta"><span>4 courses &nbsp; 7 hours</span><span>→</span></div>
+      </div>
+      <div class="module-card" onclick="showPage('home')">
+        <div class="module-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div class="badge specialized">Specialized</div>
+        <h3>Compliance & Governance</h3>
+        <p>Navigate regulatory frameworks, implement compliance controls, audit logging, and maintain security posture.</p>
+        <div class="module-meta"><span>4 courses &nbsp; 6 hours</span><span>→</span></div>
+      </div>
+      <div class="module-card" onclick="startScan()" style="border-color:#ff444433; cursor:pointer;">
+        <div class="module-icon" style="color:#ff6666;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
+        <div class="badge danger">Expert</div>
+        <h3>Security Graph & Analytics</h3>
+        <p>Leverage graph-based analysis, risk scoring, correlate security events, and optimize your security architecture.</p>
+        <div class="module-meta"><span>5 courses &nbsp; 9 hours</span><span>→</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCAN -->
+<div id="scan" class="page">
+  <canvas id="matrixCanvas"></canvas>
+  <div class="scan-content">
+    <div class="scan-title">SECURITY SCAN INITIATED</div>
+    <div class="scan-sub">Analyzing cloud infrastructure for vulnerabilities...</div>
+    <div class="terminal">
+      <div class="term-header">
+        <span>[ PROGRESS ]</span>
+        <span id="pct">0%</span>
+      </div>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="bar"></div></div>
+      <div class="term-log" id="log">$ Connecting to cloud endpoints...</div>
+      <div class="compromised-label">Compromised Systems:</div>
+      <div class="compromised-list">
+        <div class="comp-item" id="c1"><div class="comp-dot"></div>Database Clusters</div>
+        <div class="comp-item" id="c2"><div class="comp-dot"></div>API Keys & Tokens</div>
+        <div class="comp-item" id="c3"><div class="comp-dot"></div>Storage Buckets</div>
+        <div class="comp-item" id="c4"><div class="comp-dot"></div>IAM Credentials</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GOTCHA -->
+<div id="gotcha" class="page">
+  <canvas id="matrixCanvas2"></canvas>
+  <div class="gotcha-content">
+    <div class="gotcha-icon">⚠️</div>
+    <div class="gotcha-title">GOTCHA!</div>
+    <div class="gotcha-sub">Happy April Fools' Day!</div>
+    <div class="gotcha-box">
+      <p>No systems were compromised. Your infrastructure remains secure.</p>
+      <p>This was just a friendly security awareness demonstration. Did it get you?</p>
+      <button class="btn-home" onclick="showPage('home')">Back to Home</button>
+    </div>
+    <div class="gotcha-footer">Remember: Always verify before clicking. Stay security-conscious!</div>
+  </div>
+</div>
+
+<script>
+  // ── Matrix rain ──
+  function startMatrix(canvasId) {
+    const canvas = document.getElementById(canvasId);
+    const ctx = canvas.getContext('2d');
+    function resize() {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+    const chars = '01';
+    const fontSize = 13;
+    let cols = Math.floor(canvas.width / fontSize);
+    let drops = Array(cols).fill(1);
+    return setInterval(() => {
+      cols = Math.floor(canvas.width / fontSize);
+      if (drops.length < cols) drops = [...drops, ...Array(cols - drops.length).fill(1)];
+      ctx.fillStyle = 'rgba(0,0,0,0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#00cc55';
+      ctx.font = fontSize + 'px IBM Plex Mono';
+      for (let i = 0; i < cols; i++) {
+        const c = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(c, i * fontSize, drops[i] * fontSize);
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      }
+    }, 50);
+  }
+
+  let matrix1, matrix2;
+
+  // ── Page routing ──
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const pg = document.getElementById(id);
+    pg.classList.add('active');
+    window.scrollTo(0,0);
+    if (id === 'gotcha' && !matrix2) matrix2 = startMatrix('matrixCanvas2');
+  }
+
+  // ── Warning alarm ──
+  let alarmCtx, alarmInterval;
+  function startBeeps() {
+    alarmCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playWail(startTime) {
+      const osc = alarmCtx.createOscillator();
+      const gain = alarmCtx.createGain();
+      const dist = alarmCtx.createWaveShaper();
+
+      // Slight distortion for urgency
+      const curve = new Float32Array(256);
+      for (let i = 0; i < 256; i++) {
+        const x = (i * 2) / 256 - 1;
+        curve[i] = (Math.PI + 200) * x / (Math.PI + 200 * Math.abs(x));
+      }
+      dist.curve = curve;
+
+      osc.connect(dist); dist.connect(gain); gain.connect(alarmCtx.destination);
+      osc.type = 'sawtooth';
+
+      // Sweep from low to high (classic alarm wail)
+      osc.frequency.setValueAtTime(400, startTime);
+      osc.frequency.linearRampToValueAtTime(900, startTime + 0.35);
+      osc.frequency.linearRampToValueAtTime(400, startTime + 0.7);
+
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(0.3, startTime + 0.05);
+      gain.gain.setValueAtTime(0.3, startTime + 0.65);
+      gain.gain.linearRampToValueAtTime(0, startTime + 0.7);
+
+      osc.start(startTime);
+      osc.stop(startTime + 0.72);
+    }
+
+    // Fire wails repeatedly
+    let i = 0;
+    playWail(alarmCtx.currentTime);
+    alarmInterval = setInterval(() => {
+      i++;
+      playWail(alarmCtx.currentTime);
+    }, 750);
+  }
+  function stopBeeps() {
+    clearInterval(alarmInterval);
+    if (alarmCtx) { alarmCtx.close(); alarmCtx = null; }
+  }
+
+  // ── Scan sequence ──
+  let scanRunning = false;
+  function startScan() {
+    if (scanRunning) return;
+    scanRunning = true;
+    showPage('scan');
+    startBeeps();
+    if (!matrix1) matrix1 = startMatrix('matrixCanvas');
+
+    const bar = document.getElementById('bar');
+    const pct = document.getElementById('pct');
+    const log = document.getElementById('log');
+    const items = [
+      { at: 8,  msg: '$ Enumerating cloud resources...' },
+      { at: 22, msg: '$ Scanning IAM permissions...' },
+      { at: 38, msg: '$ Extracting database credentials...' },
+      { at: 52, msg: '$ Dumping API keys and tokens...' },
+      { at: 68, msg: '$ Exfiltrating storage buckets...' },
+      { at: 84, msg: '$ Escalating privileges...' },
+      { at: 96, msg: '$ Finalizing breach report...' },
+    ];
+    const reveals = [
+      { at: 35, id: 'c1' }, { at: 50, id: 'c2' },
+      { at: 65, id: 'c3' }, { at: 80, id: 'c4' },
+    ];
+    // reset
+    bar.style.width = '0%'; pct.textContent = '0%'; log.textContent = '$ Connecting to cloud endpoints...';
+    ['c1','c2','c3','c4'].forEach(id => document.getElementById(id).classList.remove('show'));
+
+    let progress = 0;
+    // ~2 seconds total: 100 steps at 20ms each
+    const tick = setInterval(() => {
+      progress = Math.min(progress + 1, 100);
+      bar.style.width = progress + '%';
+      pct.textContent = progress + '%';
+      const msg = items.find(x => progress >= x.at && progress < x.at + 14);
+      if (msg) log.textContent = msg.msg;
+      reveals.forEach(r => { if (progress >= r.at) document.getElementById(r.id).classList.add('show'); });
+      if (progress >= 100) {
+        clearInterval(tick);
+        stopBeeps();
+        setTimeout(() => { scanRunning = false; showPage('gotcha'); }, 300);
+      }
+    }, 20);
+  }
+</script>
+</body>
+</html>
